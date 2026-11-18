@@ -1,0 +1,439 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Corre & Joga">
+<meta name="theme-color" content="#12061f">
+<link rel="apple-touch-icon" href="icon.png">
+<link rel="icon" href="icon.png">
+<title>Corre & Joga</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #12061f; --card: rgba(35, 12, 55, .72); --card2: rgba(255,255,255,.08); --text: #fff4fb; --muted: #d4a9d9;
+    --accent: #ff3fa4; --orange: #ff9a3c; --purple: #8a3ffc; --cyan: #3ff2ff;
+    --green: #4dffb8; --red: #ff4f6d; --yellow: #ffd23f; --border: rgba(255, 99, 196, .28);
+    --display: "Anton", "Impact", "Arial Narrow", sans-serif;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html { background: var(--bg); }
+  body { margin: 0 auto; color: var(--text); max-width: 560px; min-height: 100vh;
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    padding: 0 16px calc(env(safe-area-inset-bottom) + 28px);
+    background:
+      radial-gradient(120% 60% at 50% 0%, rgba(255,63,164,.22), transparent 60%),
+      linear-gradient(180deg, #12061f 0%, #1c0833 45%, #12061f 100%);
+    background-attachment: fixed; }
+
+  /* hero */
+  .hero { position: relative; margin: 0 -16px 14px; height: calc(env(safe-area-inset-top) + 210px); overflow: hidden;
+    background: linear-gradient(180deg, #2a0b4a 0%, #7a1fa2 30%, #ff3fa4 58%, #ff9a3c 80%, #ffd23f 100%); }
+  .hero .sun { position: absolute; left: 50%; bottom: 34px; width: 170px; height: 170px; transform: translateX(-50%); border-radius: 50%;
+    background: linear-gradient(180deg, #fff3a0 0%, #ffb347 45%, #ff3fa4 100%);
+    -webkit-mask: repeating-linear-gradient(180deg, #000 0 14px, transparent 14px 18px);
+            mask: repeating-linear-gradient(180deg, #000 0 14px, transparent 14px 18px);
+    box-shadow: 0 0 60px rgba(255,180,80,.6); }
+  .hero .sea { position: absolute; left: 0; right: 0; bottom: 0; height: 40px;
+    background: linear-gradient(180deg, #5a1680, #1c0833);
+    -webkit-mask: repeating-linear-gradient(180deg, #000 0 3px, rgba(0,0,0,.55) 3px 6px);
+            mask: repeating-linear-gradient(180deg, #000 0 3px, rgba(0,0,0,.55) 3px 6px); }
+  .hero svg.palms { position: absolute; bottom: 30px; left: 0; width: 100%; height: 190px; }
+  .hero .title { position: absolute; left: 0; right: 0; top: calc(env(safe-area-inset-top) + 22px); text-align: center; }
+  .hero .title .big { font-family: var(--display); font-size: 52px; line-height: .9; letter-spacing: 1px; text-transform: uppercase;
+    color: #fff; text-shadow: 0 0 18px rgba(255,63,164,.9), 3px 3px 0 #8a3ffc; }
+  .hero .title .big em { font-style: normal; color: var(--yellow); }
+  .hero .title .tag { font-size: 11px; letter-spacing: 4px; text-transform: uppercase; color: #fff; opacity: .9; margin-top: 6px; }
+
+  h2 { font-family: var(--display); font-weight: 400; font-size: 20px; text-transform: uppercase; letter-spacing: 1px; color: var(--accent); margin: 22px 0 10px; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 18px; padding: 16px;
+    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); box-shadow: 0 8px 30px rgba(0,0,0,.35); }
+  .balance { text-align: center; padding: 20px 16px; position: relative; z-index: 2; margin-top: -40px; }
+  .balance .label, .stat .l, .timer .sub { text-transform: uppercase; letter-spacing: 2px; font-size: 11px; color: var(--muted); }
+  .balance .value { font-family: var(--display); font-size: 62px; line-height: 1.05; font-variant-numeric: tabular-nums; margin: 6px 0 4px; letter-spacing: 1px; }
+  .balance .hint { font-size: 14px; color: var(--muted); }
+  .pos { color: var(--green); text-shadow: 0 0 16px rgba(77,255,184,.45); }
+  .neg { color: var(--red); text-shadow: 0 0 16px rgba(255,79,109,.45); }
+  .low { color: var(--yellow); text-shadow: 0 0 16px rgba(255,210,63,.45); }
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 10px; }
+  .stat { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 12px 6px; text-align: center; }
+  .stat .v { font-family: var(--display); font-size: 26px; letter-spacing: .5px; font-variant-numeric: tabular-nums;
+    background: linear-gradient(180deg, #ffd23f, #ff3fa4); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .stat .l { font-size: 9.5px; letter-spacing: 1.2px; margin-top: 3px; }
+  .timer { text-align: center; margin-top: 10px; }
+  .timer .clock { font-family: var(--display); font-size: 54px; letter-spacing: 2px; font-variant-numeric: tabular-nums; margin: 4px 0 12px; color: var(--cyan);
+    text-shadow: 0 0 14px rgba(63,242,255,.6); }
+  button { font: inherit; border: 0; border-radius: 12px; padding: 12px 16px; cursor: pointer; color: var(--text); background: var(--card2); }
+  button.primary { background: linear-gradient(90deg, #ff3fa4, #ff9a3c); color: #2a0018; font-weight: 800; }
+  button.play { width: 100%; font-family: var(--display); font-size: 26px; letter-spacing: 2px; text-transform: uppercase; padding: 14px; color: #1a0030;
+    background: linear-gradient(90deg, #3ff2ff, #8a3ffc 55%, #ff3fa4); box-shadow: 0 0 24px rgba(138,63,252,.55); }
+  button.play.running { background: linear-gradient(90deg, #ff9a3c, #ff3fa4); color: #2a0018; box-shadow: 0 0 24px rgba(255,63,164,.6); }
+  button.small { padding: 6px 10px; font-size: 13px; border-radius: 9px; }
+  button.danger { color: var(--red); }
+  .row { display: flex; gap: 8px; align-items: center; }
+  .row > * { flex: 1; }
+  input { font: inherit; width: 100%; background: rgba(0,0,0,.3); color: var(--text); border: 1px solid var(--border);
+    border-radius: 10px; padding: 11px 12px; font-size: 16px; }
+  input:focus { outline: 2px solid var(--accent); border-color: transparent; }
+  label { font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--muted); display: block; margin: 0 0 5px 2px; }
+  .field { margin-bottom: 10px; }
+  .tabs { display: flex; gap: 6px; background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 4px; margin: 22px 0 10px; }
+  .tabs button { flex: 1; background: transparent; padding: 9px 4px; font-family: var(--display); font-size: 17px; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); }
+  .tabs button.active { background: linear-gradient(90deg, rgba(255,63,164,.35), rgba(138,63,252,.35)); color: #fff; }
+  .list { display: flex; flex-direction: column; gap: 8px; }
+  .item { display: flex; align-items: center; gap: 10px; background: var(--card); border: 1px solid var(--border); border-left: 3px solid var(--accent); border-radius: 12px; padding: 11px 12px; }
+  .item .main { flex: 1; min-width: 0; }
+  .item .t { font-weight: 800; font-variant-numeric: tabular-nums; }
+  .item .d { font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .empty { color: var(--muted); text-align: center; padding: 18px; font-size: 14px; }
+  .hidden { display: none !important; }
+  dialog { background: #200a38; color: var(--text); border: 1px solid var(--border); border-radius: 18px; padding: 18px; width: min(92vw, 420px); }
+  dialog::backdrop { background: rgba(10,0,20,.7); }
+  dialog h3 { margin: 0 0 14px; font-family: var(--display); font-weight: 400; font-size: 26px; letter-spacing: 1px; text-transform: uppercase; color: var(--accent); }
+  .actions { display: flex; gap: 8px; margin-top: 14px; }
+  .actions button { flex: 1; }
+  .note { font-size: 12px; color: var(--muted); margin-top: 8px; line-height: 1.4; }
+  .bar { height: 8px; background: rgba(0,0,0,.35); border-radius: 99px; overflow: hidden; margin-top: 12px; }
+  .bar > div { height: 100%; width: 0; transition: width .3s; }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="sun"></div>
+  <svg class="palms" viewBox="0 0 400 190" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+    <g fill="#1a0630">
+      <path d="M40 190 C46 150 50 115 58 80 L62 81 C56 116 52 150 50 190 Z"/>
+      <path d="M60 80 C40 62 18 60 0 70 C20 58 44 58 60 76 Z"/>
+      <path d="M60 80 C48 54 30 42 10 42 C34 38 54 52 62 76 Z"/>
+      <path d="M60 80 C66 54 82 40 104 38 C84 46 70 58 63 78 Z"/>
+      <path d="M60 80 C82 66 104 66 120 78 C100 70 80 72 63 82 Z"/>
+      <path d="M60 80 C58 60 64 44 74 34 C68 48 64 62 62 80 Z"/>
+      <path d="M92 190 C94 165 96 140 100 120 L103 121 C99 141 98 165 98 190 Z"/>
+      <path d="M101 120 C88 106 72 104 60 110 C74 100 90 102 102 117 Z"/>
+      <path d="M101 120 C110 102 126 96 140 100 C124 100 112 108 103 120 Z"/>
+      <path d="M101 120 C98 104 104 92 112 86 C106 98 104 108 103 120 Z"/>
+      <path d="M352 190 C350 150 344 112 334 74 L338 73 C348 110 356 150 358 190 Z"/>
+      <path d="M336 74 C318 52 296 46 276 52 C298 42 322 48 338 70 Z"/>
+      <path d="M336 74 C346 50 366 40 388 42 C366 46 350 56 339 74 Z"/>
+      <path d="M336 74 C356 62 380 64 400 78 C378 70 356 70 338 78 Z"/>
+      <path d="M336 74 C316 66 296 70 282 84 C296 66 318 62 336 70 Z"/>
+      <path d="M336 74 C334 54 340 40 350 30 C344 44 340 58 338 74 Z"/>
+      <rect x="0" y="182" width="400" height="8"/>
+    </g>
+  </svg>
+  <div class="sea"></div>
+  <div class="title">
+    <div class="big">Corre <em>&amp;</em> Joga</div>
+    <div class="tag">cada km vale uma hora</div>
+  </div>
+</header>
+
+<div class="card balance">
+  <div class="label">Saldo de jogo</div>
+  <div class="value" id="balance">0h 00m</div>
+  <div class="hint" id="balanceHint">Corra pra liberar horas de jogo.</div>
+  <div class="bar"><div id="bar"></div></div>
+</div>
+
+<div class="stats">
+  <div class="stat"><div class="v" id="totalKm">0</div><div class="l">km corridos</div></div>
+  <div class="stat"><div class="v" id="totalEarned">0h</div><div class="l">horas ganhas</div></div>
+  <div class="stat"><div class="v" id="totalPlayed">0h</div><div class="l">horas jogadas</div></div>
+</div>
+
+<div class="card timer" style="margin-top:12px">
+  <div class="sub" id="timerStatus">Sessão parada</div>
+  <div class="clock" id="clock">00:00:00</div>
+  <button class="play" id="playBtn">▶ Jogar</button>
+</div>
+
+<div class="card" style="margin-top:12px">
+  <div class="row">
+    <div><label for="quickKm">Corri hoje (km)</label><input id="quickKm" type="number" inputmode="decimal" step="0.01" min="0" placeholder="ex: 5"></div>
+    <div style="flex:0 0 auto; align-self:flex-end"><button class="primary" id="quickAdd">+ Adicionar</button></div>
+  </div>
+</div>
+
+<div class="tabs">
+  <button data-tab="runs" class="active">Corridas</button>
+  <button data-tab="sessions">Jogatinas</button>
+  <button data-tab="settings">Ajustes</button>
+</div>
+
+<section id="tab-runs">
+  <div class="row" style="margin-bottom:10px"><button id="addRun">+ Corrida com data</button></div>
+  <div class="list" id="runList"></div>
+</section>
+
+<section id="tab-sessions" class="hidden">
+  <div class="row" style="margin-bottom:10px"><button id="addSession">+ Lançar tempo manualmente</button></div>
+  <div class="list" id="sessionList"></div>
+</section>
+
+<section id="tab-settings" class="hidden">
+  <div class="card">
+    <div class="field">
+      <label for="ratio">Horas de jogo por km corrido</label>
+      <input id="ratio" type="number" inputmode="decimal" step="0.05" min="0">
+      <div class="note">Padrão: 1 km = 1 hora. Mudar isso recalcula todo o saldo.</div>
+    </div>
+    <div class="field">
+      <label for="adjust">Ajuste manual do saldo (horas, pode ser negativo)</label>
+      <input id="adjust" type="number" inputmode="decimal" step="0.25">
+      <div class="note">Use pra bônus ou correções gerais sem mexer no histórico.</div>
+    </div>
+    <button class="primary" id="saveSettings" style="width:100%">Salvar ajustes</button>
+  </div>
+  <h2>Backup</h2>
+  <div class="card">
+    <div class="row">
+      <button id="exportBtn">⬇ Exportar</button>
+      <button id="importBtn">⬆ Importar</button>
+    </div>
+    <input type="file" id="importFile" accept="application/json,.json" class="hidden">
+    <div class="note">Os dados ficam só neste aparelho/navegador. Exporte de vez em quando pra não perder nada se o Safari limpar os dados.</div>
+    <button class="danger" id="resetBtn" style="width:100%; margin-top:12px">Apagar tudo</button>
+  </div>
+</section>
+
+<dialog id="runDialog">
+  <form method="dialog" id="runForm">
+    <h3 id="runDialogTitle">Corrida</h3>
+    <div class="field"><label>Data</label><input type="date" id="runDate" required></div>
+    <div class="field"><label>Distância (km)</label><input type="number" id="runKm" inputmode="decimal" step="0.01" min="0" required></div>
+    <div class="field"><label>Observação (opcional)</label><input type="text" id="runNote" placeholder="ex: parque, 32 min"></div>
+    <div class="actions">
+      <button value="cancel" formnovalidate>Cancelar</button>
+      <button class="primary" value="ok">Salvar</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="sessionDialog">
+  <form method="dialog" id="sessionForm">
+    <h3 id="sessionDialogTitle">Jogatina</h3>
+    <div class="field"><label>Data</label><input type="date" id="sesDate" required></div>
+    <div class="row field">
+      <div><label>Horas</label><input type="number" id="sesH" inputmode="numeric" min="0" step="1" value="0"></div>
+      <div><label>Minutos</label><input type="number" id="sesM" inputmode="numeric" min="0" max="59" step="1" value="0"></div>
+    </div>
+    <div class="field"><label>Observação (opcional)</label><input type="text" id="sesNote" placeholder="ex: missão do banco"></div>
+    <div class="actions">
+      <button value="cancel" formnovalidate>Cancelar</button>
+      <button class="primary" value="ok">Salvar</button>
+    </div>
+  </form>
+</dialog>
+
+<script>
+(() => {
+  const KEY = 'correjoga.v1';
+  const $ = id => document.getElementById(id);
+
+  // ---------- state ----------
+  const defaults = () => ({ ratio: 1, adjustHours: 0, runs: [], sessions: [], timerStart: null });
+  let S;
+  try { S = Object.assign(defaults(), JSON.parse(localStorage.getItem(KEY)) || {}); }
+  catch { S = defaults(); }
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { alert('Não consegui salvar: ' + e.message); } };
+  const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+
+  // ---------- helpers ----------
+  const todayStr = () => { const d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0, 10); };
+  const fmtDate = s => { const [y, m, d] = s.split('-'); return `${d}/${m}/${y}`; };
+  const fmtKm = n => n.toLocaleString('pt-BR', { maximumFractionDigits: 2 });
+  function fmtHM(ms, withSign) {
+    const neg = ms < 0; let m = Math.floor(Math.abs(ms) / 60000);
+    const h = Math.floor(m / 60); m = m % 60;
+    return (neg ? '−' : (withSign ? '' : '')) + `${h}h ${String(m).padStart(2, '0')}m`;
+  }
+  function fmtClock(ms) {
+    let s = Math.floor(Math.max(0, ms) / 1000);
+    const h = Math.floor(s / 3600); s -= h * 3600; const m = Math.floor(s / 60); s -= m * 60;
+    return [h, m, s].map(x => String(x).padStart(2, '0')).join(':');
+  }
+  const H = 3600000;
+  const totals = () => {
+    const km = S.runs.reduce((a, r) => a + r.km, 0);
+    const earned = km * S.ratio * H + (S.adjustHours || 0) * H;
+    const played = S.sessions.reduce((a, s) => a + s.ms, 0);
+    const live = S.timerStart ? Date.now() - S.timerStart : 0;
+    return { km, earned, played, live, balance: earned - played - live };
+  };
+  const num = v => { const n = parseFloat(String(v).replace(',', '.')); return isFinite(n) ? n : NaN; };
+
+  // ---------- render ----------
+  function renderTotals() {
+    const t = totals();
+    $('totalKm').textContent = fmtKm(t.km);
+    $('totalEarned').textContent = fmtHM(t.earned).replace(' 00m', '');
+    $('totalPlayed').textContent = fmtHM(t.played + t.live).replace(' 00m', '');
+    const b = $('balance');
+    b.textContent = fmtHM(t.balance);
+    b.className = 'value ' + (t.balance <= 0 ? 'neg' : t.balance < 30 * 60000 ? 'low' : 'pos');
+    const hint = $('balanceHint');
+    if (t.balance <= 0) hint.textContent = t.km === 0 ? 'Corra pra liberar horas de jogo.' : `Sem saldo. Faltam ${fmtKm(Math.abs(t.balance) / H / (S.ratio || 1))} km pra zerar.`;
+    else if (S.timerStart) hint.textContent = 'Saldo descendo enquanto você joga.';
+    else hint.textContent = 'Pode jogar! 🎮';
+    const pct = t.earned > 0 ? Math.max(0, Math.min(100, t.balance / t.earned * 100)) : 0;
+    $('bar').style.width = pct + '%';
+    $('bar').style.background = t.balance < 30 * 60000 ? 'linear-gradient(90deg,#ff4f6d,#ffd23f)' : 'linear-gradient(90deg,#8a3ffc,#ff3fa4,#ff9a3c)';
+
+    // timer
+    const btn = $('playBtn');
+    if (S.timerStart) {
+      $('clock').textContent = fmtClock(t.live);
+      btn.textContent = '❚❚ Pausar'; btn.classList.add('running');
+      const started = new Date(S.timerStart).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+      $('timerStatus').textContent = t.balance <= 0 ? '⚠️ Saldo acabou! Hora de parar.' : `Jogando desde ${started}`;
+      $('timerStatus').className = 'sub' + (t.balance <= 0 ? ' neg' : '');
+    } else {
+      $('clock').textContent = '00:00:00';
+      btn.textContent = '▶ Jogar'; btn.classList.remove('running');
+      $('timerStatus').textContent = 'Sessão parada'; $('timerStatus').className = 'sub';
+    }
+  }
+
+  function renderLists() {
+    const rl = $('runList'); rl.innerHTML = '';
+    const runs = [...S.runs].sort((a, b) => b.date.localeCompare(a.date) || b.created - a.created);
+    if (!runs.length) rl.innerHTML = '<div class="empty">Nenhuma corrida ainda. Bora!</div>';
+    for (const r of runs) {
+      const el = document.createElement('div'); el.className = 'item';
+      el.innerHTML = `<div class="main"><div class="t">${fmtKm(r.km)} km <span class="pos" style="font-weight:500;font-size:13px">+${fmtHM(r.km * S.ratio * H)}</span></div><div class="d"></div></div>
+        <button class="small" data-act="edit">Editar</button><button class="small danger" data-act="del">✕</button>`;
+      el.querySelector('.d').textContent = fmtDate(r.date) + (r.note ? ' · ' + r.note : '');
+      el.querySelector('[data-act=edit]').onclick = () => openRun(r);
+      el.querySelector('[data-act=del]').onclick = () => { if (confirm(`Apagar corrida de ${fmtKm(r.km)} km?`)) { S.runs = S.runs.filter(x => x.id !== r.id); save(); render(); } };
+      rl.appendChild(el);
+    }
+    const sl = $('sessionList'); sl.innerHTML = '';
+    const ses = [...S.sessions].sort((a, b) => b.date.localeCompare(a.date) || b.created - a.created);
+    if (!ses.length) sl.innerHTML = '<div class="empty">Nenhuma jogatina registrada.</div>';
+    for (const s of ses) {
+      const el = document.createElement('div'); el.className = 'item';
+      el.innerHTML = `<div class="main"><div class="t">${fmtHM(s.ms)}</div><div class="d"></div></div>
+        <button class="small" data-act="edit">Editar</button><button class="small danger" data-act="del">✕</button>`;
+      el.querySelector('.d').textContent = fmtDate(s.date) + (s.manual ? ' · manual' : ' · timer') + (s.note ? ' · ' + s.note : '');
+      el.querySelector('[data-act=edit]').onclick = () => openSession(s);
+      el.querySelector('[data-act=del]').onclick = () => { if (confirm(`Apagar jogatina de ${fmtHM(s.ms)}?`)) { S.sessions = S.sessions.filter(x => x.id !== s.id); save(); render(); } };
+      sl.appendChild(el);
+    }
+    $('ratio').value = S.ratio;
+    $('adjust').value = S.adjustHours || 0;
+  }
+  function render() { renderTotals(); renderLists(); }
+
+  // ---------- timer ----------
+  $('playBtn').onclick = () => {
+    if (S.timerStart) {
+      const ms = Date.now() - S.timerStart;
+      if (ms >= 60000 || confirm('Sessão de menos de 1 minuto. Salvar mesmo assim?')) {
+        const d = new Date(S.timerStart); d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+        S.sessions.push({ id: uid(), date: d.toISOString().slice(0, 10), ms, start: S.timerStart, created: Date.now() });
+      }
+      S.timerStart = null;
+    } else {
+      const t = totals();
+      if (t.balance <= 0 && !confirm('Você está sem saldo. Começar mesmo assim? (vai ficar negativo)')) return;
+      S.timerStart = Date.now();
+    }
+    save(); render();
+  };
+  setInterval(renderTotals, 1000);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) renderTotals(); });
+
+  // ---------- quick add ----------
+  $('quickAdd').onclick = () => {
+    const km = num($('quickKm').value);
+    if (!(km > 0)) { $('quickKm').focus(); return; }
+    S.runs.push({ id: uid(), date: todayStr(), km, note: '', created: Date.now() });
+    $('quickKm').value = ''; save(); render();
+  };
+  $('quickKm').addEventListener('keydown', e => { if (e.key === 'Enter') $('quickAdd').click(); });
+
+  // ---------- dialogs ----------
+  let editingRun = null, editingSes = null;
+  function openRun(r) {
+    editingRun = r || null;
+    $('runDialogTitle').textContent = r ? 'Editar corrida' : 'Nova corrida';
+    $('runDate').value = r ? r.date : todayStr();
+    $('runKm').value = r ? r.km : '';
+    $('runNote').value = r ? r.note || '' : '';
+    $('runDialog').showModal();
+  }
+  $('addRun').onclick = () => openRun(null);
+  $('runDialog').addEventListener('close', () => {
+    if ($('runDialog').returnValue !== 'ok') return;
+    const km = num($('runKm').value); if (!(km >= 0)) return;
+    const data = { date: $('runDate').value || todayStr(), km, note: $('runNote').value.trim() };
+    if (editingRun) Object.assign(S.runs.find(x => x.id === editingRun.id), data);
+    else S.runs.push({ id: uid(), created: Date.now(), ...data });
+    save(); render();
+  });
+
+  function openSession(s) {
+    editingSes = s || null;
+    $('sessionDialogTitle').textContent = s ? 'Editar jogatina' : 'Lançar jogatina';
+    $('sesDate').value = s ? s.date : todayStr();
+    const mins = s ? Math.round(s.ms / 60000) : 0;
+    $('sesH').value = Math.floor(mins / 60); $('sesM').value = mins % 60;
+    $('sesNote').value = s ? s.note || '' : '';
+    $('sessionDialog').showModal();
+  }
+  $('addSession').onclick = () => openSession(null);
+  $('sessionDialog').addEventListener('close', () => {
+    if ($('sessionDialog').returnValue !== 'ok') return;
+    const h = num($('sesH').value) || 0, m = num($('sesM').value) || 0;
+    const ms = Math.max(0, Math.round((h * 60 + m) * 60000));
+    const data = { date: $('sesDate').value || todayStr(), ms, note: $('sesNote').value.trim() };
+    if (editingSes) Object.assign(S.sessions.find(x => x.id === editingSes.id), data);
+    else S.sessions.push({ id: uid(), created: Date.now(), manual: true, ...data });
+    save(); render();
+  });
+
+  // ---------- tabs ----------
+  document.querySelectorAll('.tabs button').forEach(b => b.onclick = () => {
+    document.querySelectorAll('.tabs button').forEach(x => x.classList.toggle('active', x === b));
+    ['runs', 'sessions', 'settings'].forEach(t => $('tab-' + t).classList.toggle('hidden', t !== b.dataset.tab));
+  });
+
+  // ---------- settings ----------
+  $('saveSettings').onclick = () => {
+    const r = num($('ratio').value), a = num($('adjust').value);
+    if (r >= 0) S.ratio = r;
+    S.adjustHours = isFinite(a) ? a : 0;
+    save(); render(); alert('Ajustes salvos.');
+  };
+  $('exportBtn').onclick = () => {
+    const blob = new Blob([JSON.stringify(S, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+    a.download = `corre-e-joga-backup-${todayStr()}.json`; a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  };
+  $('importBtn').onclick = () => $('importFile').click();
+  $('importFile').onchange = async e => {
+    const f = e.target.files[0]; if (!f) return;
+    try {
+      const d = JSON.parse(await f.text());
+      if (!Array.isArray(d.runs) || !Array.isArray(d.sessions)) throw new Error('arquivo inválido');
+      if (!confirm('Substituir todos os dados atuais pelo backup?')) return;
+      S = Object.assign(defaults(), d); save(); render(); alert('Backup importado!');
+    } catch (err) { alert('Não deu pra importar: ' + err.message); }
+    e.target.value = '';
+  };
+  $('resetBtn').onclick = () => {
+    if (confirm('Apagar TODAS as corridas e jogatinas? Não tem volta.') && confirm('Certeza mesmo?')) { S = defaults(); save(); render(); }
+  };
+
+  render();
+})();
+</script>
+</body>
+</html>
