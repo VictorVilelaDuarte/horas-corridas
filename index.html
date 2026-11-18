@@ -100,6 +100,32 @@
   .note { font-size: 12px; color: var(--muted); margin-top: 8px; line-height: 1.4; }
   .bar { height: 8px; background: rgba(0,0,0,.35); border-radius: 99px; overflow: hidden; margin-top: 12px; }
   .bar > div { height: 100%; width: 0; transition: width .3s; }
+  /* semana */
+  .week-head { display: flex; align-items: center; gap: 8px; }
+  .week-head .ttl { flex: 1; text-align: center; }
+  .week-head .ttl b { font-family: var(--display); font-weight: 400; font-size: 20px; letter-spacing: 1px; text-transform: uppercase; color: var(--accent); display: block; }
+  .week-head .ttl span { font-size: 12px; color: var(--muted); }
+  .week-head button { padding: 8px 14px; font-size: 18px; }
+  .week-head button:disabled { opacity: .3; }
+  .chart { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-top: 14px; }
+  .day { display: flex; flex-direction: column; align-items: center; }
+  .day .bars { height: 110px; width: 100%; display: flex; align-items: flex-end; justify-content: center; gap: 3px; }
+  .day .b { width: 11px; border-radius: 5px 5px 2px 2px; min-height: 2px; position: relative; }
+  .day .b.km { background: linear-gradient(180deg, #ffd23f, #ff3fa4); box-shadow: 0 0 10px rgba(255,63,164,.5); }
+  .day .b.hr { background: linear-gradient(180deg, #3ff2ff, #8a3ffc); box-shadow: 0 0 10px rgba(63,242,255,.4); }
+  .day .b.zero { background: rgba(255,255,255,.12); box-shadow: none; }
+  .day .vals { font-size: 9.5px; line-height: 1.25; text-align: center; margin-top: 5px; font-variant-numeric: tabular-nums; min-height: 24px; }
+  .day .vals .k { color: #ff7fc0; } .day .vals .h { color: var(--cyan); }
+  .day .lbl { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-top: 2px; }
+  .day.today .lbl { color: #fff; font-weight: 800; }
+  .legend { display: flex; justify-content: center; gap: 16px; font-size: 11px; color: var(--muted); margin-top: 10px; }
+  .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; }
+  .streaks { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+  .goal { margin-top: 10px; }
+  .goal .top { display: flex; justify-content: space-between; align-items: baseline; }
+  .goal .top b { font-family: var(--display); font-weight: 400; font-size: 24px; letter-spacing: .5px; }
+  .goal .msg { font-size: 13px; color: var(--muted); margin-top: 8px; }
+  .goal .msg.done { color: var(--green); }
 </style>
 </head>
 <body>
@@ -160,6 +186,26 @@
   </div>
 </div>
 
+<div class="streaks">
+  <div class="stat"><div class="v" id="streakNow">0</div><div class="l">🔥 dias seguidos</div></div>
+  <div class="stat"><div class="v" id="streakBest">0</div><div class="l">🏆 recorde</div></div>
+</div>
+
+<div class="card" style="margin-top:12px">
+  <div class="week-head">
+    <button id="weekPrev" aria-label="Semana anterior">‹</button>
+    <div class="ttl"><b id="weekTitle">Esta semana</b><span id="weekRange"></span></div>
+    <button id="weekNext" aria-label="Próxima semana">›</button>
+  </div>
+  <div class="goal">
+    <div class="top"><span class="l" style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--muted)">Meta da semana</span><b id="goalText">0 / 0 km</b></div>
+    <div class="bar"><div id="goalBar"></div></div>
+    <div class="msg" id="goalMsg"></div>
+  </div>
+  <div class="chart" id="chart"></div>
+  <div class="legend"><span><i style="background:#ff3fa4"></i>km corridos</span><span><i style="background:#3ff2ff"></i>horas jogadas</span></div>
+</div>
+
 <div class="tabs">
   <button data-tab="runs" class="active">Corridas</button>
   <button data-tab="sessions">Jogatinas</button>
@@ -188,6 +234,11 @@
       <input id="adjust" type="number" inputmode="decimal" step="0.25">
       <div class="note">Use pra bônus ou correções gerais sem mexer no histórico.</div>
     </div>
+    <div class="row">
+      <div class="field"><label for="weeklyGoal">Meta semanal (km)</label><input id="weeklyGoal" type="number" inputmode="decimal" step="1" min="0"></div>
+      <div class="field"><label for="weeklyBonus">Bônus ao bater (h)</label><input id="weeklyBonus" type="number" inputmode="decimal" step="0.5" min="0"></div>
+    </div>
+    <div class="note" style="margin:-4px 0 12px">A semana vai de segunda a domingo. Cada semana em que você bate a meta rende o bônus no saldo. Meta 0 desliga; bônus 0 deixa só a meta.</div>
     <button class="primary" id="saveSettings" style="width:100%">Salvar ajustes</button>
   </div>
   <h2>Backup</h2>
@@ -237,7 +288,7 @@
   const $ = id => document.getElementById(id);
 
   // ---------- state ----------
-  const defaults = () => ({ ratio: 1, adjustHours: 0, runs: [], sessions: [], timerStart: null });
+  const defaults = () => ({ ratio: 1, adjustHours: 0, weeklyGoal: 15, weeklyBonus: 2, runs: [], sessions: [], timerStart: null });
   let S;
   try { S = Object.assign(defaults(), JSON.parse(localStorage.getItem(KEY)) || {}); }
   catch { S = defaults(); }
@@ -259,9 +310,28 @@
     return [h, m, s].map(x => String(x).padStart(2, '0')).join(':');
   }
   const H = 3600000;
+  // datas locais
+  const parseD = s => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); };
+  const toStr = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  const addDays = (s, n) => { const d = parseD(s); d.setDate(d.getDate() + n); return toStr(d); };
+  const weekStart = s => { const d = parseD(s); return addDays(s, -((d.getDay() + 6) % 7)); };
+  const kmByDay = () => { const m = {}; for (const r of S.runs) m[r.date] = (m[r.date] || 0) + r.km; return m; };
+  const kmByWeek = () => { const m = {}; for (const r of S.runs) { const w = weekStart(r.date); m[w] = (m[w] || 0) + r.km; } return m; };
+  const goalWeeks = () => S.weeklyGoal > 0 ? Object.values(kmByWeek()).filter(k => k >= S.weeklyGoal - 1e-9).length : 0;
+  function streaks() {
+    const days = new Set(Object.entries(kmByDay()).filter(([, k]) => k > 0).map(([d]) => d));
+    let cur = 0, d = todayStr();
+    if (!days.has(d)) d = addDays(d, -1);
+    while (days.has(d)) { cur++; d = addDays(d, -1); }
+    let best = 0, run = 0, prev = null;
+    for (const x of [...days].sort()) { run = prev && addDays(prev, 1) === x ? run + 1 : 1; best = Math.max(best, run); prev = x; }
+    return { cur, best, today: days.has(todayStr()) };
+  }
+
   const totals = () => {
     const km = S.runs.reduce((a, r) => a + r.km, 0);
-    const earned = km * S.ratio * H + (S.adjustHours || 0) * H;
+    const bonus = goalWeeks() * (S.weeklyBonus || 0) * H;
+    const earned = km * S.ratio * H + (S.adjustHours || 0) * H + bonus;
     const played = S.sessions.reduce((a, s) => a + s.ms, 0);
     const live = S.timerStart ? Date.now() - S.timerStart : 0;
     return { km, earned, played, live, balance: earned - played - live };
@@ -327,8 +397,57 @@
     }
     $('ratio').value = S.ratio;
     $('adjust').value = S.adjustHours || 0;
+    $('weeklyGoal').value = S.weeklyGoal;
+    $('weeklyBonus').value = S.weeklyBonus;
   }
-  function render() { renderTotals(); renderLists(); }
+  let weekOffset = 0;
+  const DOW = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
+  function renderWeek() {
+    const st = streaks();
+    $('streakNow').textContent = st.cur;
+    $('streakBest').textContent = st.best;
+    const today = todayStr();
+    const ws = addDays(weekStart(today), weekOffset * 7);
+    const days = [...Array(7)].map((_, i) => addDays(ws, i));
+    const kd = kmByDay(), pd = {};
+    for (const s of S.sessions) pd[s.date] = (pd[s.date] || 0) + s.ms;
+    if (S.timerStart) pd[today] = (pd[today] || 0) + (Date.now() - S.timerStart);
+    const kms = days.map(d => kd[d] || 0), hrs = days.map(d => (pd[d] || 0) / H);
+    const maxK = Math.max(1, ...kms), maxH = Math.max(1, ...hrs);
+    const weekKm = kms.reduce((a, b) => a + b, 0), weekH = hrs.reduce((a, b) => a + b, 0);
+    $('weekTitle').textContent = weekOffset === 0 ? 'Esta semana' : weekOffset === -1 ? 'Semana passada' : `Há ${-weekOffset} semanas`;
+    $('weekRange').textContent = `${fmtDate(days[0]).slice(0, 5)} a ${fmtDate(days[6]).slice(0, 5)} · ${fmtKm(weekKm)} km · ${fmtHM(weekH * H)} jogadas`;
+    $('weekNext').disabled = weekOffset >= 0;
+    const fmtH = h => { const m = Math.round(h * 60); return m >= 60 ? `${Math.floor(m / 60)}h${m % 60 ? String(m % 60).padStart(2, '0') : ''}` : `${m}m`; };
+    $('chart').innerHTML = days.map((d, i) => `
+      <div class="day${d === today ? ' today' : ''}">
+        <div class="bars">
+          <div class="b km${kms[i] ? '' : ' zero'}" style="height:${kms[i] ? Math.max(4, kms[i] / maxK * 100) : 2}%"></div>
+          <div class="b hr${hrs[i] ? '' : ' zero'}" style="height:${hrs[i] ? Math.max(4, hrs[i] / maxH * 100) : 2}%"></div>
+        </div>
+        <div class="vals"><div class="k">${kms[i] ? fmtKm(kms[i]) : ''}</div><div class="h">${hrs[i] ? fmtH(hrs[i]) : ''}</div></div>
+        <div class="lbl">${DOW[i]}</div>
+      </div>`).join('');
+    // meta
+    const g = S.weeklyGoal || 0, bonus = S.weeklyBonus || 0;
+    const goalBox = $('goalText').closest('.goal');
+    goalBox.classList.toggle('hidden', !(g > 0));
+    if (g > 0) {
+      $('goalText').textContent = `${fmtKm(weekKm)} / ${fmtKm(g)} km`;
+      const pct = Math.min(100, weekKm / g * 100);
+      $('goalBar').style.width = pct + '%';
+      $('goalBar').style.background = pct >= 100 ? 'linear-gradient(90deg,#4dffb8,#3ff2ff)' : 'linear-gradient(90deg,#8a3ffc,#ff3fa4,#ff9a3c)';
+      const msg = $('goalMsg');
+      const bonusTxt = bonus > 0 ? ` +${fmtHM(bonus * H).replace(' 00m', '')} de bônus` : '';
+      if (weekKm >= g - 1e-9) { msg.textContent = `Meta batida! 🎉${bonusTxt ? bonusTxt + ' no saldo.' : ''}`; msg.className = 'msg done'; }
+      else if (weekOffset < 0) { msg.textContent = `Faltaram ${fmtKm(g - weekKm)} km nessa semana.`; msg.className = 'msg'; }
+      else { msg.textContent = `Faltam ${fmtKm(g - weekKm)} km pra bater a meta${bonusTxt ? ' e ganhar' + bonusTxt : ''}.`; msg.className = 'msg'; }
+    }
+  }
+  $('weekPrev').onclick = () => { weekOffset--; renderWeek(); };
+  $('weekNext').onclick = () => { if (weekOffset < 0) { weekOffset++; renderWeek(); } };
+
+  function render() { renderTotals(); renderLists(); renderWeek(); }
 
   // ---------- timer ----------
   $('playBtn').onclick = () => {
@@ -346,8 +465,8 @@
     }
     save(); render();
   };
-  setInterval(renderTotals, 1000);
-  document.addEventListener('visibilitychange', () => { if (!document.hidden) renderTotals(); });
+  setInterval(() => { renderTotals(); if (S.timerStart) renderWeek(); }, 1000);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) render(); });
 
   // ---------- quick add ----------
   $('quickAdd').onclick = () => {
@@ -409,6 +528,9 @@
     const r = num($('ratio').value), a = num($('adjust').value);
     if (r >= 0) S.ratio = r;
     S.adjustHours = isFinite(a) ? a : 0;
+    const wg = num($('weeklyGoal').value), wb = num($('weeklyBonus').value);
+    S.weeklyGoal = wg >= 0 ? wg : 0;
+    S.weeklyBonus = wb >= 0 ? wb : 0;
     save(); render(); alert('Ajustes salvos.');
   };
   $('exportBtn').onclick = () => {
