@@ -1,0 +1,23 @@
+{
+  "name": "Merecido — recompensas por hábitos",
+  "short_name": "Merecido",
+  "description": "Transforme hábitos em recompensas: cada km, página ou dia saudável vira tempo de jogo, série ou um doce merecido.",
+  "lang": "pt-BR",
+  "id": "./",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0f0f15",
+  "theme_color": "#0f0f15",
+  "categories": ["health", "lifestyle", "productivity"],
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Registrar hábito", "url": "./#hoje" },
+    { "name": "Carteira", "url": "./#carteira" }
+  ]
+}
