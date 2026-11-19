@@ -191,16 +191,17 @@
   <div class="stat"><div class="v" id="streakBest">0</div><div class="l">🏆 recorde</div></div>
 </div>
 
+<div class="card goal" id="goalCard" style="margin-top:12px">
+  <div class="top"><span class="l" style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--muted)">Próximo bônus</span><b id="goalText">0 / 0 km</b></div>
+  <div class="bar"><div id="goalBar"></div></div>
+  <div class="msg" id="goalMsg"></div>
+</div>
+
 <div class="card" style="margin-top:12px">
   <div class="week-head">
     <button id="weekPrev" aria-label="Semana anterior">‹</button>
     <div class="ttl"><b id="weekTitle">Esta semana</b><span id="weekRange"></span></div>
     <button id="weekNext" aria-label="Próxima semana">›</button>
-  </div>
-  <div class="goal">
-    <div class="top"><span class="l" style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--muted)">Meta da semana</span><b id="goalText">0 / 0 km</b></div>
-    <div class="bar"><div id="goalBar"></div></div>
-    <div class="msg" id="goalMsg"></div>
   </div>
   <div class="chart" id="chart"></div>
   <div class="legend"><span><i style="background:#ff3fa4"></i>km corridos</span><span><i style="background:#3ff2ff"></i>horas jogadas</span></div>
@@ -235,10 +236,10 @@
       <div class="note">Use pra bônus ou correções gerais sem mexer no histórico.</div>
     </div>
     <div class="row">
-      <div class="field"><label for="weeklyGoal">Meta semanal (km)</label><input id="weeklyGoal" type="number" inputmode="decimal" step="1" min="0"></div>
-      <div class="field"><label for="weeklyBonus">Bônus ao bater (h)</label><input id="weeklyBonus" type="number" inputmode="decimal" step="0.5" min="0"></div>
+      <div class="field"><label for="weeklyGoal">Meta (km)</label><input id="weeklyGoal" type="number" inputmode="decimal" step="1" min="0"></div>
+      <div class="field"><label for="weeklyBonus">Bônus por meta (h)</label><input id="weeklyBonus" type="number" inputmode="decimal" step="0.5" min="0"></div>
     </div>
-    <div class="note" style="margin:-4px 0 12px">A semana vai de segunda a domingo. Cada semana em que você bate a meta rende o bônus no saldo. Meta 0 desliga; bônus 0 deixa só a meta.</div>
+    <div class="note" style="margin:-4px 0 12px">A cada vez que o total de km corridos completa a meta, você ganha o bônus. Ex.: meta 7 km → aos 7, 14, 21 km... cai um bônus. Meta 0 desliga.</div>
     <button class="primary" id="saveSettings" style="width:100%">Salvar ajustes</button>
   </div>
   <h2>Backup</h2>
@@ -316,8 +317,8 @@
   const addDays = (s, n) => { const d = parseD(s); d.setDate(d.getDate() + n); return toStr(d); };
   const weekStart = s => { const d = parseD(s); return addDays(s, -((d.getDay() + 6) % 7)); };
   const kmByDay = () => { const m = {}; for (const r of S.runs) m[r.date] = (m[r.date] || 0) + r.km; return m; };
-  const kmByWeek = () => { const m = {}; for (const r of S.runs) { const w = weekStart(r.date); m[w] = (m[w] || 0) + r.km; } return m; };
-  const goalWeeks = () => S.weeklyGoal > 0 ? Object.values(kmByWeek()).filter(k => k >= S.weeklyGoal - 1e-9).length : 0;
+  const totalKm = () => S.runs.reduce((a, r) => a + r.km, 0);
+  const goalsHit = () => S.weeklyGoal > 0 ? Math.floor((totalKm() + 1e-9) / S.weeklyGoal) : 0;
   function streaks() {
     const days = new Set(Object.entries(kmByDay()).filter(([, k]) => k > 0).map(([d]) => d));
     let cur = 0, d = todayStr();
@@ -330,7 +331,7 @@
 
   const totals = () => {
     const km = S.runs.reduce((a, r) => a + r.km, 0);
-    const bonus = goalWeeks() * (S.weeklyBonus || 0) * H;
+    const bonus = goalsHit() * (S.weeklyBonus || 0) * H;
     const earned = km * S.ratio * H + (S.adjustHours || 0) * H + bonus;
     const played = S.sessions.reduce((a, s) => a + s.ms, 0);
     const live = S.timerStart ? Date.now() - S.timerStart : 0;
@@ -428,20 +429,20 @@
         <div class="vals"><div class="k">${kms[i] ? fmtKm(kms[i]) : ''}</div><div class="h">${hrs[i] ? fmtH(hrs[i]) : ''}</div></div>
         <div class="lbl">${DOW[i]}</div>
       </div>`).join('');
-    // meta
+    // meta acumulada: a cada X km, um bônus
     const g = S.weeklyGoal || 0, bonus = S.weeklyBonus || 0;
-    const goalBox = $('goalText').closest('.goal');
-    goalBox.classList.toggle('hidden', !(g > 0));
+    $('goalCard').classList.toggle('hidden', !(g > 0));
     if (g > 0) {
-      $('goalText').textContent = `${fmtKm(weekKm)} / ${fmtKm(g)} km`;
-      const pct = Math.min(100, weekKm / g * 100);
+      const tk = totalKm(), hits = goalsHit();
+      const into = Math.max(0, tk - hits * g);
+      $('goalText').textContent = `${fmtKm(into)} / ${fmtKm(g)} km`;
+      const pct = Math.min(100, into / g * 100);
       $('goalBar').style.width = pct + '%';
-      $('goalBar').style.background = pct >= 100 ? 'linear-gradient(90deg,#4dffb8,#3ff2ff)' : 'linear-gradient(90deg,#8a3ffc,#ff3fa4,#ff9a3c)';
-      const msg = $('goalMsg');
-      const bonusTxt = bonus > 0 ? ` +${fmtHM(bonus * H).replace(' 00m', '')} de bônus` : '';
-      if (weekKm >= g - 1e-9) { msg.textContent = `Meta batida! 🎉${bonusTxt ? bonusTxt + ' no saldo.' : ''}`; msg.className = 'msg done'; }
-      else if (weekOffset < 0) { msg.textContent = `Faltaram ${fmtKm(g - weekKm)} km nessa semana.`; msg.className = 'msg'; }
-      else { msg.textContent = `Faltam ${fmtKm(g - weekKm)} km pra bater a meta${bonusTxt ? ' e ganhar' + bonusTxt : ''}.`; msg.className = 'msg'; }
+      $('goalBar').style.background = 'linear-gradient(90deg,#8a3ffc,#ff3fa4,#ff9a3c)';
+      const bonusTxt = bonus > 0 ? `+${fmtHM(bonus * H).replace(' 00m', '')}` : '';
+      const earnedTxt = hits > 0 ? ` Metas batidas: ${hits}${bonus > 0 ? ` (${fmtHM(hits * bonus * H).replace(' 00m', '')} de bônus)` : ''} 🎉` : '';
+      $('goalMsg').textContent = `Faltam ${fmtKm(g - into)} km pro próximo bônus${bonusTxt ? ' de ' + bonusTxt : ''}.` + earnedTxt;
+      $('goalMsg').className = 'msg' + (hits > 0 ? ' done' : '');
     }
   }
   $('weekPrev').onclick = () => { weekOffset--; renderWeek(); };
